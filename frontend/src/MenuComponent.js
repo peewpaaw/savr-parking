@@ -54,6 +54,9 @@ const MenuComponent = ({ onShow }) => {
           </Form>
         </div>
       </div>
+      <br></br>
+      <div class="alert alert-primary">Область здания</div>
+      <div class="alert alert-danger">Область запрета парковки</div>
       {/* <VehicleListComponent /> */}
     </div>
   );
