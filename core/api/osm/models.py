@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import HTTPException
-from pydantic import BaseModel, EmailStr, validator, constr
+from pydantic import BaseModel
 
 
 class TunnedModel(BaseModel):

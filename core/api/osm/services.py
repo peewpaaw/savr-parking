@@ -1,13 +1,17 @@
+import requests
 import itertools
 import math
-from math import hypot
 
-import requests
+from shapely.geometry import Point, Polygon
 
-OSM_API = 'https://overpass-api.de/api/interpreter'
+
+OSM_API = "https://overpass-api.de/api/interpreter"
+
 # Радиус по которому смотрим ближайшие здания
 RADIUS = 50
+# Радиус Земли
 EARTH_RADIUS = 6378137
+
 
 def calculate_initial_compass_bearing(pointA, pointB):
     lat1 = math.radians(pointA[0])
@@ -27,6 +31,7 @@ def calculate_initial_compass_bearing(pointA, pointB):
 
     return compass_bearing
 
+
 # Function to calculate a point given a start point, bearing, and distance
 def calculate_destination_point(lat, lon, bearing, distance):
     bearing = math.radians(bearing)
@@ -44,13 +49,14 @@ def calculate_destination_point(lat, lon, bearing, distance):
 
     return new_lat, new_lon
 
+
 def get_min_lines(coords):
     # две точки с наименьшим расстоянием
     min_distance = float('inf')
     closest_points = None
 
     for pair in itertools.combinations(coords, 2):
-        distance = hypot(pair[0][0] - pair[1][0], pair[0][1] - pair[1][1])
+        distance = math.hypot(pair[0][0] - pair[1][0], pair[0][1] - pair[1][1])
         if distance < min_distance:
             min_distance = distance
             closest_points = pair
@@ -59,6 +65,7 @@ def get_min_lines(coords):
     line2 = [item for item in coords if item not in line1]
     lines.append(line1)
     lines.append(line2)
+    #lines_test = get_rectangle_points(lines)
     return lines
 
 def get_way_nodes(way_id):
@@ -93,19 +100,9 @@ def get_nearest_buildings(lat, long):
     url = f"{OSM_API}?data={osm_query}"
     response = requests.get(url)
 
-    #buildings_nodes = []
-    #way_ids = []
     if response.status_code == 200:
         return response.json()['elements']
     return None
-    #     # Получаем id всех зданий
-    #     print(response.json())
-    #     way_ids = []
-    #     for elem in response.json()['elements']:
-    #         if elem['type'] == 'way':
-    #             way_ids.append(elem['id'])
-    #     #buildings_nodes = [get_way_nodes(way_id) for way_id in way_ids]
-    # return way_ids
 
 
 def get_rectangle_points(coords: []):
@@ -127,6 +124,14 @@ def get_rectangle_points(coords: []):
     return new_coords
 
 
+def polygon_contains_point(coords: [], position: []):
+    polygon = Polygon(coords)
+    point = Point(position)
+    #print(polygon)
+    #print(point)
+    return polygon.contains(point)
+
+
 """ENTRY"""
 
 
@@ -139,7 +144,9 @@ def entry_point(lat, lon):
         build_elem = dict()
         if build['type'] == 'way':
             build_elem['id'] = build['id']
-            build_elem['levels'] = int(build['tags']['building:levels'])
+            build_elem['levels'] = 1
+            if 'building:levels' in build['tags']:
+                build_elem['levels'] = int(build['tags']['building:levels'])
         if bool(build_elem):
             buildings.append(build_elem)
 
@@ -163,9 +170,7 @@ def entry_point(lat, lon):
             #new_line = (new_point1, new_point2)
             new_lines.append(new_point1)
             new_lines.append(new_point2)
-        build['nodes_rect_ext'] = new_lines
+        build['nodes_rect_ext'] = get_rectangle_points(new_lines)
+        build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
     print("BUILDINGS: ", buildings)
     return buildings
-
-
-
