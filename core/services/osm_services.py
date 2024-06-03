@@ -127,8 +127,6 @@ def get_rectangle_points(coords: []):
 def polygon_contains_point(coords: [], position: []):
     polygon = Polygon(coords)
     point = Point(position)
-    #print(polygon)
-    #print(point)
     return polygon.contains(point)
 
 
@@ -167,10 +165,8 @@ def entry_point(lat, lon):
                                                      line[1][1],
                                                      bearing,
                                                      build['levels']*3)
-            #new_line = (new_point1, new_point2)
             new_lines.append(new_point1)
             new_lines.append(new_point2)
         build['nodes_rect_ext'] = get_rectangle_points(new_lines)
         build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
-    print("BUILDINGS: ", buildings)
     return buildings
