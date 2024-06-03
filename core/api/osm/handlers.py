@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .services import entry_point
+from services.osm_services import entry_point
 
 
 osm_router = APIRouter(tags=['OSM'])

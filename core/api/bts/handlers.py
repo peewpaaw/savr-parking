@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from settings import BTS_TOKEN
-from .services import BtsAPIClient
+from services.bts_services import BtsAPIClient
 
 bts_router = APIRouter(tags=['BTS'])
 
@@ -15,6 +15,6 @@ async def get_vehicles():
 
 
 @bts_router.get("/current_position")
-async def get_current_position(object_id: str | None):
+async def get_current_position(object_id: str | None = None):
     response = bts_client.get_current_position(object_id)
     return response
