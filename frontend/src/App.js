@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import MapComponent from "./MapComponent";
-import MenuComponent from "./MenuComponent";
+import MapComponent from "./components/MapComponent";
+import MenuComponent from "./components/MenuComponent";
 import axios from "axios";
 
 function App() {

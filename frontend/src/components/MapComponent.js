@@ -11,12 +11,12 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 const customIcon = L.icon({
-  iconUrl: require("./transport.png"),
+  iconUrl: require("../transport.png"),
   iconSize: [42, 42],
   iconAnchor: [12, 28],
 });
 const customIconSpeed = L.icon({
-  iconUrl: require("./transportRed.png"),
+  iconUrl: require("../transportRed.png"),
   iconSize: [42, 42],
   iconAnchor: [12, 28],
 });

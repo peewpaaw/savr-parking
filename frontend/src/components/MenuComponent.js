@@ -30,14 +30,23 @@ const MenuComponent = ({ data, setState }) => {
       <h5>Список транспортных средств</h5>
       <div className="card">
         <div className="card-body">
-          {data?.map(
-            (el) =>
-              el?.latitude !== null &&
-              el?.latitude !== "null" && (
-                <p style={{cursor:'pointer'}} onClick={() => handleShow(el?.latitude, el?.longitude)}>
-                  {el?.object_name}
-                </p>
-              ),
+          {data?.length ? (
+            data?.map(
+              (el) =>
+                el?.latitude !== null &&
+                el?.latitude !== "null" && (
+                  <p
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleShow(el?.latitude, el?.longitude)}
+                  >
+                    {el?.object_name}
+                  </p>
+                ),
+            )
+          ) : (
+            <div className="spinner-border" role="status">
+              <span className="sr-only"/>
+            </div>
           )}
         </div>
       </div>
