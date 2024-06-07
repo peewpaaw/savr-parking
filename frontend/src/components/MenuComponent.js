@@ -53,7 +53,7 @@ const MenuComponent = ({ data, setState }) => {
                       <h5>{el?.object_name}</h5>
                     </div>
                   </div>
-                  <div className="card-body">
+                  <div className="card-body" style={{textAlign:'left'}}>
                     <p className="card-title">Скорость: {el?.speed} км/ч</p>
                     {el.speed === '0' && (
                       <p className="card-text">
@@ -61,6 +61,7 @@ const MenuComponent = ({ data, setState }) => {
                         {el?.parking === false ? "запрещена" : "не запрещена"}
                       </p>
                     )}
+                    <p>Последнее обновление: {el.datetime}</p>
                   </div>
                 </div>
               ),

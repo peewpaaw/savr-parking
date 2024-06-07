@@ -39,7 +39,7 @@ const MapComponent = ({
     const map = useMap();
 
     useEffect(() => {
-      map.flyTo([coordinates.lat, coordinates.lng], map.getMaxZoom(18));
+      map.flyTo([coordinates.lat, coordinates.lng], map.getZoom(12));
     }, [coordinates, map]);
 
     return null;
@@ -72,11 +72,14 @@ const MapComponent = ({
   return (
     <MapContainer
       center={[coordinates?.lat, coordinates?.lng]}
-      zoom={12}
+      zoom={18}
+      maxZoom={20}
+      minZoom={7}
       style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom="20"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       {data?.length &&
