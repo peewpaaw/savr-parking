@@ -1,10 +1,11 @@
 import React from "react";
+import { backend } from "../backend";
 
 const MenuComponent = ({ data, setState }) => {
   const handleShow = async (latitude, longitude) => {
     if (!isNaN(latitude) && !isNaN(longitude)) {
       const response = await fetch(
-        `http://127.0.0.1:8000/nearest?lat=${latitude}&lon=${longitude}`,
+        `${backend}nearest?lat=${latitude}&lon=${longitude}`,
       );
       const data = await response.json();
 
@@ -39,13 +40,13 @@ const MenuComponent = ({ data, setState }) => {
                     style={{ cursor: "pointer" }}
                     onClick={() => handleShow(el?.latitude, el?.longitude)}
                   >
-                    {el?.object_name}
+                    {el?.object_name} {el?.speed} км/ч
                   </p>
                 ),
             )
           ) : (
             <div className="spinner-border" role="status">
-              <span className="sr-only"/>
+              <span className="sr-only" />
             </div>
           )}
         </div>

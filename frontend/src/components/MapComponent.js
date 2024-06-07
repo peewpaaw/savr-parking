@@ -9,6 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { backend } from "../backend";
 
 const customIcon = L.icon({
   iconUrl: require("../transport.png"),
@@ -41,7 +42,7 @@ const MapComponent = ({
 
   const handleMarkerClick = async (e) => {
     const response = await fetch(
-      `http://127.0.0.1:8000/nearest?lat=${e.latlng?.lat}&lon=${e.latlng?.lng}`,
+      `${backend}nearest?lat=${e.latlng?.lat}&lon=${e.latlng?.lng}`,
     );
     const data = await response.json();
 
@@ -71,9 +72,8 @@ const MapComponent = ({
       whenCreated={(map) => {
         console.log("The underlying leaflet map instance:", map);
       }}
-
       style={{ height: "100%", width: "100%" }}
-      >
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -3,6 +3,7 @@ import "./App.css";
 import MapComponent from "./components/MapComponent";
 import MenuComponent from "./components/MenuComponent";
 import axios from "axios";
+import { backend } from "./backend";
 
 function App() {
   const [state, setState] = useState({
@@ -11,14 +12,14 @@ function App() {
     polygons_ext: [],
     noParking: false,
   });
-  const query = "http://127.0.0.1:8000/current_position";
+  const query = `${backend}current_position`;
   const [data, setData] = useState([]);
 
   useEffect(() => {
     axios(query)
       .then((res) => setData(res.data))
       .catch((error) => console.log(error));
-  }, []);
+  }, [query]);
 
   return (
     <div className="App">
