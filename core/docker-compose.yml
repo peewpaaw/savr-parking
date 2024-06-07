@@ -10,3 +10,10 @@ services:
       - 8000:8000
     env_file:
       - .env
+
+  redis:
+    restart: always
+    image: redis:7.0.5-alpine
+    hostname: redis
+    ports:
+      - 6379:6379

@@ -3,6 +3,8 @@ from fastapi import APIRouter
 from settings import BTS_TOKEN
 from services.bts_services import BtsAPIClient
 
+from services.osm_services import entry_point
+
 
 SAVR_VEHICLES = ["5746200", "5746207", "1985488", "2651742", "5383695", "1985696", "1986136", "5733383",
                  "5733374", "5427501", "5383755", "5536815", "5536816", "1985485", "5383756", "5734617"]
@@ -22,5 +24,15 @@ async def get_vehicles():
 @bts_router.get("/current_position")
 async def get_current_position(object_id: str | None = None):
     response = bts_client.get_current_position(object_id)
-    response_filtered = list(filter(lambda item: item['object_id'] in SAVR_VEHICLES, response))
+    response_filtered = list(filter(lambda vehicle: vehicle['object_id'] in SAVR_VEHICLES, response))
+    for item in response_filtered:
+        if 'latitude' in item and 'longitude' in item and item['speed'] == "0":
+            nearest_buildings = entry_point(item['latitude'], item['longitude'])
+            if len(nearest_buildings) > 0:
+                parking = [building['parking'] for building in nearest_buildings]
+                item['parking'] = False if False in parking else True
+            else:
+                item['parking'] = True
+        else:
+            item['parking'] = True
     return response_filtered

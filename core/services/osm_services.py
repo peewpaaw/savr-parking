@@ -1,8 +1,12 @@
+import json
+
 import requests
 import itertools
 import math
 
 from shapely.geometry import Point, Polygon
+
+from settings import redis
 
 
 OSM_API = "https://overpass-api.de/api/interpreter"
@@ -134,6 +138,12 @@ def polygon_contains_point(coords: [], position: []):
 
 
 def entry_point(lat, lon):
+    cache_key = f"{str(lat)} {str(lon)}"
+    cached_data = redis.get(cache_key)
+    if cached_data is not None:
+        result = json.loads(cached_data)
+        return result
+
     # Получаем ближайшие здания в радиусе от точки
     nearest_buildings = get_nearest_buildings(lat, lon)
 
@@ -169,4 +179,10 @@ def entry_point(lat, lon):
             new_lines.append(new_point2)
         build['nodes_rect_ext'] = get_rectangle_points(new_lines)
         build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
+    # CACHE
+    if len(buildings) > 0:
+        json_data = json.dumps(buildings)
+        redis.set(cache_key, json_data)
     return buildings
+
+
