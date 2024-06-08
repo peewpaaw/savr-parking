@@ -27,8 +27,8 @@ function App() {
     // fetchData();
 
     const interval = setInterval(() => {
-      fetchData();
-    }, 5000);
+      fetchData().then(r => console.log(r));
+    }, 7000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
