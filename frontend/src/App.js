@@ -7,24 +7,38 @@ import { backend } from "./backend";
 
 function App() {
   const [state, setState] = useState({
-    coordinates: { lat: 53.900479, lng: 27.558558 },
+    coordinates: { lat: 53.9023, lng: 27.5619 },
     polygons: [],
     polygons_ext: [],
     noParking: false,
   });
   const query = `${backend}current_position`;
   const [data, setData] = useState([]);
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(query);
+      setData(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    axios(query)
-      .then((res) => setData(res.data))
-      .catch((error) => console.log(error));
-  }, [query]);
+    // fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   return (
     <div className="App">
       <div className="menu">
-        <MenuComponent data={data} setState={setState} />
+        <MenuComponent
+          data={data}
+          setState={setState}
+        />
       </div>
       <div className="map">
         <MapComponent
