@@ -25,7 +25,7 @@ async def get_vehicles():
 async def get_current_position(object_id: str | None = None):
     response = bts_client.get_current_position(object_id)
     response_filtered = list(filter(lambda vehicle: vehicle['object_id'] in SAVR_VEHICLES, response))
-    response_filtered = list(filter(lambda vehicle: 'android_state' in vehicle, response))
+    response_filtered = response_filtered + list(filter(lambda vehicle: 'android_state' in vehicle, response))
     for item in response_filtered:
         item['parking'] = True
         if 'latitude' in item and item['speed'] == "0" and 'android_state' not in item:
