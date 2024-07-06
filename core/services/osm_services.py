@@ -8,7 +8,6 @@ from shapely.geometry import Point, Polygon
 
 from settings import redis
 
-
 OSM_API = "https://overpass-api.de/api/interpreter"
 
 # Радиус по которому смотрим ближайшие здания
@@ -69,8 +68,9 @@ def get_min_lines(coords):
     line2 = [item for item in coords if item not in line1]
     lines.append(line1)
     lines.append(line2)
-    #lines_test = get_rectangle_points(lines)
+    # lines_test = get_rectangle_points(lines)
     return lines
+
 
 def get_way_nodes(way_id):
     osm_query = f"""
@@ -138,6 +138,7 @@ def polygon_contains_point(coords: [], position: []):
 from scipy.spatial import ConvexHull
 import numpy
 
+
 def get_sorted_points(points, building_levels):
     print('POINTS: ', points)
     # Найдем выпуклую оболочку
@@ -149,6 +150,14 @@ def get_sorted_points(points, building_levels):
     sorted_points = [points[i] for i in hull_indices]
     print('SORTED POINTS: ', sorted_points)
     # return hull_points
+    lines = []
+    i = 0
+    while i < len(sorted_points):
+        line = []
+        line.append([sorted_points[i]])
+        line.append([sorted_points[i + 1]])
+        lines.append(line)
+        i += 1
 
     hull_points = points1[hull.vertices]
     # Вычислим площадь многоугольника
@@ -186,13 +195,13 @@ def get_sorted_points(points, building_levels):
         new_line = []
         bearing = calculate_initial_compass_bearing(line[0], line[1])
         new_point = calculate_destination_point(line[1][0],
-                                                 line[1][1],
-                                                 bearing + 180,
-                                                 building_levels * 3)
+                                                line[1][1],
+                                                bearing + 180,
+                                                building_levels * 3)
         result.append(new_point)
-        #new_line.append(line[0])
-        #new_line.append(new_point)
-        #result.append(new_line)
+        # new_line.append(line[0])
+        # new_line.append(new_point)
+        # result.append(new_line)
     print("RESULT: ", result)
 
     return result
@@ -278,7 +287,7 @@ def entry_point(lat, lon):
         lines_to_extend = get_min_lines(build['nodes_rect'])
         new_lines = []
 
-        build['nodes_rect_ext'] = get_sorted_points(build['nodes'], build['levels']*3)
+        build['nodes_rect_ext'] = get_sorted_points(build['nodes'], build['levels'] * 3)
         build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
     # CACHE
     if len(buildings) > 0:
@@ -286,6 +295,3 @@ def entry_point(lat, lon):
         json_data = json.dumps(buildings)
         redis.set(cache_key, json_data)
     return buildings
-
-
-

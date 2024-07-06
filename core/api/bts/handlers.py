@@ -5,7 +5,6 @@ from services.bts_services import BtsAPIClient
 
 from services.osm_services import entry_point
 
-
 SAVR_VEHICLES = ["5746200", "5746207", "1985488", "2651742", "5383695", "1985696", "1986136", "5733383",
                  "5733374", "5427501", "5383755", "5536815", "5536816", "1985485", "5383756", "5734617"]
 
@@ -25,7 +24,9 @@ async def get_vehicles():
 async def get_current_position(object_id: str | None = None):
     response = bts_client.get_current_position(object_id)
     response_filtered = list(filter(lambda vehicle: vehicle['object_id'] in SAVR_VEHICLES, response))
+    response_filtered = list(filter(lambda vehicle: 'android_state' in vehicle, response))
     for item in response_filtered:
+        item['parking'] = True
         if 'latitude' in item and 'longitude' in item and item['speed'] == "0":
             nearest_buildings = entry_point(item['latitude'], item['longitude'])
             if len(nearest_buildings) > 0:
