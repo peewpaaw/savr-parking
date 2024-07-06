@@ -68,11 +68,10 @@ const MapComponent = ({
       noParking,
     });
   };
-
   return (
     <MapContainer
       center={[coordinates?.lat, coordinates?.lng]}
-      zoom={18}
+      zoom={12}
       maxZoom={20}
       minZoom={7}
       style={{ height: "100%", width: "100%" }}

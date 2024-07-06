@@ -1,7 +1,7 @@
 import React from "react";
 import { backend } from "../backend";
 
-const MenuComponent = ({ data, setState }) => {
+const MenuComponent = ({ data, setState}) => {
   const handleShow = async (latitude, longitude) => {
     if (!isNaN(latitude) && !isNaN(longitude)) {
       const response = await fetch(
@@ -17,7 +17,7 @@ const MenuComponent = ({ data, setState }) => {
       );
       const noParking = data.some((item) => item.parking === false);
 
-      setState({
+     await setState({
         coordinates: { lat: latitude, lng: longitude },
         polygons,
         polygons_ext,
