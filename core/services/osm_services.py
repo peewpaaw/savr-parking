@@ -1,9 +1,7 @@
 import json
-
 import requests
 import itertools
 import math
-
 from shapely.geometry import Point, Polygon
 
 from settings import redis
@@ -68,7 +66,6 @@ def get_min_lines(coords):
     line2 = [item for item in coords if item not in line1]
     lines.append(line1)
     lines.append(line2)
-    # lines_test = get_rectangle_points(lines)
     return lines
 
 
@@ -139,7 +136,6 @@ from scipy.spatial import ConvexHull
 import numpy
 
 
-
 def get_sorted_points(points):
     print('POINTS: ', points)
     # Найдем выпуклую оболочку
@@ -149,35 +145,26 @@ def get_sorted_points(points):
 
     # # Получим точки, входящие в выпуклую оболочку
     sorted_points = [points[i] for i in hull_indices]
-    print('SORTED POINTS: ', sorted_points)
-    # return hull_points
-    lines = []
+    return sorted_points
+
+
+def get_extended_points(points, building_levels,):
+    # получаем из точек линии, которые будем расширять
+    lines_to_extend = []
     i = 0
-    while i < len(sorted_points):
+    while i < len(points):
         line = []
-        line.append(sorted_points[i])
-        if i == len(sorted_points) - 1:
-            line.append(sorted_points[0])
+        line.append(points[i])
+        if i == len(points) - 1:
+            line.append(points[0])
         else:
-            line.append(sorted_points[i + 1])
-        lines.append(line)
+            line.append(points[i + 1])
+        lines_to_extend.append(line)
         i += 1
 
-    # hull_points = points1[hull.vertices]
-    # print('hull points: ', hull_points)
-    # print('lines: ', lines)
-
-    # расширяем полученные линии на building_levels от центральной точки
-    lines_to_extend = lines
-    return lines_to_extend
-
-
-def test_extend(lines_to_extend, building_levels):
-    test_result = []
-    result = []
+    # перемещаем точки в прямой по направлению прямой
+    result_points = []
     for line in lines_to_extend:
-        new_line = []
-        print('extend, line: ', line)
         bearing = calculate_initial_compass_bearing(line[0], line[1])
         new_point1 = calculate_destination_point(line[0][0],
                                                 line[0][1],
@@ -187,18 +174,11 @@ def test_extend(lines_to_extend, building_levels):
                                                 line[1][1],
                                                 bearing,
                                                 building_levels * 3)
-        test_result.append(new_point1)
-        test_result.append(new_point2)
-        new_line.append(new_point1)
-        new_line.append(new_point2)
-        result.append(new_line)
-        # new_line.append(line[0])
-        # new_line.append(new_point)
-        # result.append(new_line)
-    print("RESULT: ", result)
-    print("test result: ", test_result)
-    sorted_result = get_sorted_points(test_result)
-    print('sorted result: ', sorted_result)
+        result_points.append(new_point1)
+        result_points.append(new_point2)
+
+    # сортируем новые точки
+    sorted_result = get_sorted_points(result_points)
 
     return sorted_result
 
@@ -206,65 +186,17 @@ def test_extend(lines_to_extend, building_levels):
 """ENTRY"""
 
 
-# def entry_point(lat, lon):
-#     cache_key = f"{str(lat)} {str(lon)}"
-#     cached_data = redis.get(cache_key)
-#     if cached_data is not None:
-#         result = json.loads(cached_data)
-#         return result
-#
-#     # Получаем ближайшие здания в радиусе от точки
-#     nearest_buildings = get_nearest_buildings(lat, lon)
-#
-#     buildings = []
-#     for build in nearest_buildings:
-#         build_elem = dict()
-#         if build['type'] == 'way':
-#             build_elem['id'] = build['id']
-#             build_elem['levels'] = 1
-#             if 'building:levels' in build['tags']:
-#                 build_elem['levels'] = int(build['tags']['building:levels'])
-#         if bool(build_elem):
-#             buildings.append(build_elem)
-#
-#     # Формируем ноды
-#     for build in buildings:
-#         build['nodes'] = get_way_nodes(build['id'])
-#         build['nodes_rect'] = get_rectangle_points(build['nodes'])
-#         lines_to_extend = get_min_lines(build['nodes_rect'])
-#         new_lines = []
-#         for line in lines_to_extend:
-#             bearing = calculate_initial_compass_bearing(line[0], line[1])
-#             # Calculate new points by extending the line
-#             new_point1 = calculate_destination_point(line[0][0],
-#                                                      line[0][1],
-#                                                      bearing + 180,
-#                                                      build['levels']*3)
-#             new_point2 = calculate_destination_point(line[1][0],
-#                                                      line[1][1],
-#                                                      bearing,
-#                                                      build['levels']*3)
-#             new_lines.append(new_point1)
-#             new_lines.append(new_point2)
-#         build['nodes_rect_ext'] = get_rectangle_points(new_lines)
-#         build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
-#     # CACHE
-#     if len(buildings) > 0:
-#         json_data = json.dumps(buildings)
-#         redis.set(cache_key, json_data)
-#     return buildings
-
 def entry_point(lat, lon):
     cache_key = f"{str(lat)} {str(lon)}"
     cached_data = redis.get(cache_key)
     if cached_data is not None:
-        print("CACHE GET")
+        print("! cache get")
         result = json.loads(cached_data)
         return result
-    print("! cache")
+    print("! cache set")
+
     # Получаем ближайшие здания в радиусе от точки
     nearest_buildings = get_nearest_buildings(lat, lon)
-
     buildings = []
     for build in nearest_buildings:
         build_elem = dict()
@@ -279,20 +211,14 @@ def entry_point(lat, lon):
     # Формируем ноды
     for build in buildings:
         build['nodes'] = get_way_nodes(build['id'])
-        #build['nodes_rect'] = get_rectangle_points(build['nodes'])
-        #lines_to_extend = get_min_lines(build['nodes_rect'])
-        #new_lines = []
 
         build['nodes_rect'] = get_sorted_points(build['nodes'])
+        build['nodes_rect_ext'] = get_extended_points(build['nodes_rect'], build['levels'] * 2)
+        build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
 
-        #build['nodes_rect_ext'] = get_sorted_points(build['nodes'], build['levels'] * 3)
-        build['nodes_rect_ext'] = test_extend(build['nodes_rect'], build['levels']*3)
-
-        build['parking'] = True
-        #build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
     # CACHE
     if len(buildings) > 0:
-        print("cache set")
+        print("! cache set")
         json_data = json.dumps(buildings)
         redis.set(cache_key, json_data)
     return buildings
