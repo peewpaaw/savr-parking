@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { backend } from "../backend";
 
-const MenuComponent = ({ data, setState}) => {
+const MenuComponent = ({ data, setState, objects, setObjects }) => {
   const handleShow = async (latitude, longitude) => {
     if (!isNaN(latitude) && !isNaN(longitude)) {
       const response = await fetch(
@@ -17,7 +17,7 @@ const MenuComponent = ({ data, setState}) => {
       );
       const noParking = data.some((item) => item.parking === false);
 
-     await setState({
+      await setState({
         coordinates: { lat: latitude, lng: longitude },
         polygons,
         polygons_ext,
@@ -25,43 +25,95 @@ const MenuComponent = ({ data, setState}) => {
       });
     }
   };
+  console.log(objects);
 
+  const handleSelectChange = useCallback(
+    (event) => {
+      const { value } = event.target;
+      console.log(event.target.value);
+      switch (value) {
+        case "all":
+          setObjects((prevState) => ({
+            ...prevState,
+            count: data.length,
+            data,
+          }));
+          break;
+        case "savr":
+          const notMobileUsers = data.filter(
+            (el) => !el.hasOwnProperty("android_state"),
+          );
+          console.log(notMobileUsers);
+          setObjects((prevState) => ({
+            ...prevState,
+            count: notMobileUsers.length,
+            data: notMobileUsers,
+          }));
+          break;
+        case "android_state":
+          const mobileUsers = data.filter((el) =>
+            el.hasOwnProperty("android_state"),
+          );
+          console.log(mobileUsers);
+          setObjects((prevState) => ({
+            ...prevState,
+            count: mobileUsers.length,
+            data: mobileUsers,
+          }));
+          break;
+        default:
+          setObjects((prevState) => ({
+            ...prevState,
+            count: data.length,
+            data,
+          }));
+          break;
+      }
+    },
+    [data, setObjects],
+  );
   return (
-    <div style={{ padding: "10px" }}>
-      <h5>Список транспортных средств</h5>
+    <>
+      <select style={{margin:"1rem 0"}} className="form-select" defaultValue={"all"} onChange={handleSelectChange}>
+        <option value="all">Все</option>
+        <option value="savr">САВР</option>
+        <option value="android_state">Мобильные пользователи</option>
+      </select>
       <div>
         {data?.length ? (
-          data?.map(
-            (el) =>
+          objects?.data?.map(
+            (el, index) =>
               el?.latitude !== null &&
               el?.latitude !== "null" && (
                 <div
-                  className="card border-dark mb-3"
+                  key={index}
+                  className="card border-dark mb-3 text-bg-light"
                   style={{ cursor: "pointer" }}
                   onClick={() => handleShow(el?.latitude, el?.longitude)}
                 >
-                  <div className="card-header">
+                  {/*<div className="card-header">*/}
+
+                  {/*</div>*/}
+                  <div className="card-body" style={{ textAlign: "left" }}>
                     <div
-                      className={
-                        el?.speed > 0
-                          ? " circle speed"
-                          : el.parking === true
-                            ? "circle parking"
-                            : "circle no-parking"
-                      }
+                        className={
+                          el?.speed > 0
+                              ? " circle speed"
+                              : el.parking === true
+                                  ? "circle parking"
+                                  : "circle no-parking"
+                        }
                     >
                       <h5>{el?.object_name}</h5>
                     </div>
-                  </div>
-                  <div className="card-body" style={{textAlign:'left'}}>
                     <p className="card-title">Скорость: {el?.speed} км/ч</p>
-                    {el.speed === '0' && (
-                      <p className="card-text">
+                    {el.speed === "0" && (
+                      <p className="card-title">
                         Парковка{" "}
                         {el?.parking === false ? "запрещена" : "не запрещена"}
                       </p>
                     )}
-                    <p>Последнее обновление: {el.datetime}</p>
+                    <p className="card-text">Последнее обновление: {el.datetime}</p>
                   </div>
                 </div>
               ),
@@ -72,7 +124,7 @@ const MenuComponent = ({ data, setState}) => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
