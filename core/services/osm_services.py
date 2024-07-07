@@ -139,7 +139,8 @@ from scipy.spatial import ConvexHull
 import numpy
 
 
-def get_sorted_points(points, building_levels):
+
+def get_sorted_points(points):
     print('POINTS: ', points)
     # Найдем выпуклую оболочку
     points1 = numpy.array(points)
@@ -154,57 +155,52 @@ def get_sorted_points(points, building_levels):
     i = 0
     while i < len(sorted_points):
         line = []
-        line.append([sorted_points[i]])
-        line.append([sorted_points[i + 1]])
+        line.append(sorted_points[i])
+        if i == len(sorted_points) - 1:
+            line.append(sorted_points[0])
+        else:
+            line.append(sorted_points[i + 1])
         lines.append(line)
         i += 1
 
-    hull_points = points1[hull.vertices]
-    # Вычислим площадь многоугольника
-    A = 0
-    Cx = 0
-    Cy = 0
-    n = len(hull_points)
-
-    for i in range(n):
-        x0, y0 = hull_points[i]
-        x1, y1 = hull_points[(i + 1) % n]
-        cross = (x0 * y1) - (x1 * y0)
-        A += cross
-        Cx += (x0 + x1) * cross
-        Cy += (y0 + y1) * cross
-
-    A /= 2
-    # кординаты центальной точки полигона
-    Cx /= (6 * A)
-    Cy /= (6 * A)
-    print("CENTRAL POINTS: ", [Cx, Cy])
-
-    # получаем линии. от центральной точки до каждой точки полигона
-    lines_to_extend = []
-    for point in sorted_points:
-        line = []
-        line.append([Cx, Cy])
-        line.append(point)
-        lines_to_extend.append(line)
-    print("LINES TO EXTEND: ", lines_to_extend)
+    # hull_points = points1[hull.vertices]
+    # print('hull points: ', hull_points)
+    # print('lines: ', lines)
 
     # расширяем полученные линии на building_levels от центральной точки
+    lines_to_extend = lines
+    return lines_to_extend
+
+
+def test_extend(lines_to_extend, building_levels):
+    test_result = []
     result = []
     for line in lines_to_extend:
         new_line = []
+        print('extend, line: ', line)
         bearing = calculate_initial_compass_bearing(line[0], line[1])
-        new_point = calculate_destination_point(line[1][0],
-                                                line[1][1],
+        new_point1 = calculate_destination_point(line[0][0],
+                                                line[0][1],
                                                 bearing + 180,
                                                 building_levels * 3)
-        result.append(new_point)
+        new_point2 = calculate_destination_point(line[1][0],
+                                                line[1][1],
+                                                bearing,
+                                                building_levels * 3)
+        test_result.append(new_point1)
+        test_result.append(new_point2)
+        new_line.append(new_point1)
+        new_line.append(new_point2)
+        result.append(new_line)
         # new_line.append(line[0])
         # new_line.append(new_point)
         # result.append(new_line)
     print("RESULT: ", result)
+    print("test result: ", test_result)
+    sorted_result = get_sorted_points(test_result)
+    print('sorted result: ', sorted_result)
 
-    return result
+    return sorted_result
 
 
 """ENTRY"""
@@ -283,12 +279,17 @@ def entry_point(lat, lon):
     # Формируем ноды
     for build in buildings:
         build['nodes'] = get_way_nodes(build['id'])
-        build['nodes_rect'] = get_rectangle_points(build['nodes'])
-        lines_to_extend = get_min_lines(build['nodes_rect'])
-        new_lines = []
+        #build['nodes_rect'] = get_rectangle_points(build['nodes'])
+        #lines_to_extend = get_min_lines(build['nodes_rect'])
+        #new_lines = []
 
-        build['nodes_rect_ext'] = get_sorted_points(build['nodes'], build['levels'] * 3)
-        build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
+        build['nodes_rect'] = get_sorted_points(build['nodes'])
+
+        #build['nodes_rect_ext'] = get_sorted_points(build['nodes'], build['levels'] * 3)
+        build['nodes_rect_ext'] = test_extend(build['nodes_rect'], build['levels']*3)
+
+        build['parking'] = True
+        #build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
     # CACHE
     if len(buildings) > 0:
         print("cache set")
