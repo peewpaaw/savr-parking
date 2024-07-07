@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   MapContainer,
   Marker,
@@ -11,15 +11,20 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { backend } from "../backend";
 
-const customIcon = L.icon({
-  iconUrl: require("../transport.png"),
+const customIconParking = L.icon({
+  iconUrl: require("../transportGreen.png"),
   iconSize: [42, 42],
-  iconAnchor: [12, 28],
+  iconAnchor: [21, 42],
 });
 const customIconSpeed = L.icon({
+  iconUrl: require("../transport.png"),
+  iconSize: [42, 42],
+  iconAnchor: [21, 42],
+});
+const customIconNotParking = L.icon({
   iconUrl: require("../transportRed.png"),
   iconSize: [42, 42],
-  iconAnchor: [12, 28],
+  iconAnchor: [21, 42],
 });
 
 const MapComponent = ({
@@ -34,16 +39,18 @@ const MapComponent = ({
     const map = useMap();
 
     useEffect(() => {
-      map.flyTo([coordinates.lat, coordinates.lng], map.getMaxZoom(18));
+      map.flyTo([coordinates.lat, coordinates.lng], map.getZoom(12));
     }, [coordinates, map]);
 
     return null;
   };
-
+  const [loader, setLoader] = useState(true);
   const handleMarkerClick = async (e) => {
     const response = await fetch(
       `${backend}nearest?lat=${e.latlng?.lat}&lon=${e.latlng?.lng}`,
-    );
+    ).finally(() => {
+      setLoader(false);
+    });
     const data = await response.json();
 
     const polygons = data.map((polygon) =>
@@ -61,21 +68,17 @@ const MapComponent = ({
       noParking,
     });
   };
-
   return (
     <MapContainer
       center={[coordinates?.lat, coordinates?.lng]}
       zoom={12}
-      whenReady={() => {
-        console.log("This function will fire once the map is created");
-      }}
-      whenCreated={(map) => {
-        console.log("The underlying leaflet map instance:", map);
-      }}
+      maxZoom={20}
+      minZoom={7}
       style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom="20"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       {data?.length &&
@@ -83,14 +86,26 @@ const MapComponent = ({
           (el) =>
             el?.latitude && (
               <Marker
-                icon={el?.speed > 0 ? customIconSpeed : customIcon}
+                icon={
+                  el?.speed > 0
+                    ? customIconSpeed
+                    : el.parking === true
+                      ? customIconParking
+                      : customIconNotParking
+                }
                 eventHandlers={{ click: handleMarkerClick }}
                 position={[el?.latitude, el?.longitude]}
               >
                 <Popup>
-                  Координаты: {el?.latitude}, {el?.longitude} <br />
-                  Скорость: {el?.speed} <br />
-                  Запрет парковки: {noParking ? "да" : "нет"}
+                  {loader ? (
+                    <p>Загрузка...</p>
+                  ) : (
+                    <>
+                      Координаты: {el?.latitude}, {el?.longitude} <br />
+                      Скорость: {el?.speed} <br />
+                      Запрет парковки: {noParking ? "да" : "нет"}
+                    </>
+                  )}
                 </Popup>
               </Marker>
             ),
@@ -103,7 +118,6 @@ const MapComponent = ({
         polygons_ext.map((polygon, index) => (
           <Polygon key={index} positions={polygon} color="red" />
         ))}
-      {/*<LoadingIndicator />*/}
       <MapUpdater coordinates={coordinates} />
     </MapContainer>
   );

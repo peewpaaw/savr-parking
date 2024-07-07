@@ -4,3 +4,4 @@
 
 ### env
 `BTS_TOKEN=`
+`REDIS_HOST=`
