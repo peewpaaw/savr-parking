@@ -86,13 +86,14 @@ def get_way_nodes(way_id):
     return node_list
 
 
-def get_nearest_buildings(lat, long):
+def get_nearest_buildings(lat, long, r=None):
+
     osm_query = f"""
     [out:json];
     (
       way
         ["building"]
-        (around:{RADIUS},{lat},{long});
+        (around:{r if r is not None else RADIUS},{lat},{long});
     );
     out body;
     >;
@@ -222,3 +223,11 @@ def entry_point(lat, lon):
         json_data = json.dumps(buildings)
         redis.set(cache_key, json_data)
     return buildings
+
+
+def get_accident_area(object_id):
+    build = dict()
+    build['nodes'] = get_way_nodes(object_id)
+    build['nodes_rect'] = get_sorted_points(build['nodes'])
+    build['nodes_rect_ext'] = get_extended_points(build['nodes_rect'], 50)
+    return build
