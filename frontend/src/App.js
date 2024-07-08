@@ -13,13 +13,23 @@ function App() {
     polygons_ext: [],
     noParking: false,
   });
-  const query = `${backend}current_position`;
+  const vehicles = `${backend}vehicles_position`;
+  const users = `${backend}persons_position`;
   const [data, setData] = useState([]);
-  const [objects, setObjects] = useState({ count: null, data: [] });
+  const [usersData, setUsersData] = useState([]);
+  const [typeInfo, setTypeInfo] = useState("");
   const fetchData = async () => {
     try {
-      const response = await axios.get(query);
+      const response = await axios.get(vehicles);
       setData(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const fetchUsersData = async () => {
+    try {
+      const response = await axios.get(users);
+      setUsersData(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -28,37 +38,22 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchData().then((r) => console.log(r));
+      fetchUsersData().then((r) => console.log(r));
     }, 7000);
     return () => clearInterval(interval);
-  }, [fetchData]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(query);
-        setObjects((prevState) => ({
-          ...prevState,
-          count: response.data.length,
-          data: response.data,
-        }));
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [query]);
+  }, [fetchData, fetchUsersData]);
 
   return (
     <div className="App">
       <OffcanvasComponent
-        title={`Список объектов: ${objects.count}`}
+        title={`Список объектов: ${typeInfo === "" || typeInfo === "all" ? data.length + usersData.length : typeInfo === "savr" ? data.length : usersData.length}`}
         children={
           <MenuComponent
             data={data}
             setState={setState}
-            setObjects={setObjects}
-            objects={objects}
+            usersData={usersData}
+            typeInfo={typeInfo}
+            setTypeInfo={setTypeInfo}
           />
         }
       />
@@ -70,7 +65,8 @@ function App() {
           polygons_ext={state.polygons_ext}
           noParking={state.noParking}
           setState={setState}
-          objects={objects}
+          typeInfo={typeInfo}
+          usersData={usersData}
         />
       </div>
     </div>

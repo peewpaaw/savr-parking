@@ -9,13 +9,17 @@ export default function OffcanvasComponent({ title, children }) {
   return (
     <>
       <button onClick={toggleShow} className="btn">
-
-          <img style={{width:'36px'}} alt={"menu"} src={require('../menu.png')}/>
+        <img
+          style={{ width: "36px" }}
+          alt={"menu"}
+          src={require("../menu.png")}
+        />
       </button>
       <Offcanvas
         backdrop={false}
         scroll={true}
         show={show}
+        style={{ backgroundColor: "#f8f9fa" }}
         onHide={handleClose}
       >
         <Offcanvas.Header closeButton>

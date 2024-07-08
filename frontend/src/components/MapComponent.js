@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
+  Circle,
   MapContainer,
   Marker,
   Polygon,
-  Popup,
   TileLayer,
   useMap,
   useMapEvent,
@@ -11,26 +11,27 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { backend } from "../backend";
-import { Button, Modal } from "react-bootstrap";
+import ModalWindow from "./ModalWindow";
+import PopupComponent from "./Popup";
 
 const customIconParking = L.icon({
-  iconUrl: require("../transportGreen.png"),
+  iconUrl: require("../vanGreen.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 const customIconSpeed = L.icon({
-  iconUrl: require("../transport.png"),
+  iconUrl: require("../van.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 const customIconNotParking = L.icon({
-  iconUrl: require("../transportRed.png"),
+  iconUrl: require("../varRed.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 
 const locationIcon = L.icon({
-  iconUrl: require("../location.png"),
+  iconUrl: require("../circle.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
@@ -42,14 +43,16 @@ const MapComponent = ({
   noParking,
   data,
   setState,
-  objects,
+  typeInfo,
+  usersData,
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [buildingInfo, setBuildingInfo] = useState(null);
   const MapUpdater = ({ coordinates }) => {
     const map = useMap();
 
     useEffect(() => {
-      map.flyTo([coordinates.lat, coordinates.lng], map.getZoom(12));
+      map.flyTo([coordinates.lat, coordinates.lng], map.getZoom(14));
     }, [coordinates, map]);
 
     return null;
@@ -70,7 +73,6 @@ const MapComponent = ({
       polygon_ext.nodes_rect_ext.map(([lat, lng]) => [lat, lng]),
     );
     const noParking = data.some((item) => item.parking === false);
-
     await setState({
       coordinates: { lat: e.latlng?.lat, lng: e.latlng?.lng },
       polygons,
@@ -79,12 +81,16 @@ const MapComponent = ({
     });
   };
 
-  const [buildingInfo, setBuildingInfo] = useState(null);
-
   const handleMapClick = async (e) => {
     const { lat, lng } = e.latlng;
-    console.log(e);
-    // Формирование запроса к API Overpass для получения данных о зданиях
+    await setState((prevState) => ({
+      ...prevState,
+      coordinates: { lat, lng },
+      polygons: [],
+      polygons_ext: [],
+      noParking: false,
+    }));
+    // // Формирование запроса к API Overpass для получения данных о зданиях
     const query = `
       [out:json];
       (
@@ -105,10 +111,11 @@ const MapComponent = ({
       const buildingWay = data.elements.find(
         (element) => element.type === "way",
       );
-      console.log(buildingWay);
+
       const buildingData = {
-        id: buildingWay ? buildingWay.id : null,
+        id: buildingWay?.id ? buildingWay?.id : null,
         latlng: e.latlng,
+        center: [lat, lng],
       };
       setBuildingInfo(buildingData);
       setShowModal(true);
@@ -122,7 +129,7 @@ const MapComponent = ({
     useMapEvent("click", handleMapClick);
     return null;
   };
-  console.log(buildingInfo?.latlng.lat);
+
   return (
     <>
       <MapContainer
@@ -137,42 +144,68 @@ const MapComponent = ({
           maxZoom="20"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {data?.length &&
+        {buildingInfo &&
+          (buildingInfo?.coords ? (
+            <>
+              <Polygon positions={buildingInfo?.coords} color="blue" />
+              <Polygon positions={buildingInfo?.extended_area} color="red" />
+            </>
+          ) : (
+            <Circle center={buildingInfo?.center} radius={50} color="red" />
+          ))}
+        {(typeInfo === "" || typeInfo === "all" || typeInfo === "savr") &&
+          data?.length &&
           data?.map(
             (el, index) =>
               el?.latitude && (
                 <Marker
                   key={index}
                   icon={
-                    el.android_state
-                      ? locationIcon
-                      : el?.speed > 0
-                        ? customIconSpeed
-                        : el.parking === true
-                          ? customIconParking
-                          : customIconNotParking
+                    el?.speed > 0
+                      ? customIconSpeed
+                      : el.parking === true
+                        ? customIconParking
+                        : customIconNotParking
                   }
                   eventHandlers={{ click: handleMarkerClick }}
                   position={[el?.latitude, el?.longitude]}
                 >
-                  <Popup>
-                    {loader ? (
-                      <p>Загрузка...</p>
-                    ) : (
-                      <>
-                        Объект: {el.object_name} <br />
-                        Координаты: {el?.latitude}, {el?.longitude} <br />
-                        {el.android_state ? (
-                          <></>
-                        ) : (
-                          <>
-                            Скорость: {el?.speed} <br />
-                            Запрет парковки: {noParking ? "да" : "нет"}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </Popup>
+                  <PopupComponent
+                    el={el}
+                    loader={loader}
+                    noParking={noParking}
+                  />
+                </Marker>
+              ),
+          )}
+        {(typeInfo === "" ||
+          typeInfo === "all" ||
+          typeInfo === "android_state") &&
+          usersData?.length &&
+          usersData?.map(
+            (el, index) =>
+              el?.latitude && (
+                <Marker
+                  key={index}
+                  icon={locationIcon}
+                  eventHandlers={{
+                    click: (e) => {
+                      setState({
+                        coordinates: { lat: e.latlng?.lat, lng: e.latlng?.lng },
+                        polygons: null,
+                        polygons_ext: null,
+                        noParking: null,
+                      });
+                      setLoader(false);
+                    },
+                  }}
+                  position={[el?.latitude, el?.longitude]}
+                >
+                  <PopupComponent
+                    el={el}
+                    loader={loader}
+                    noParking={noParking}
+                  />
                 </Marker>
               ),
           )}
@@ -187,30 +220,12 @@ const MapComponent = ({
         <MapUpdater coordinates={coordinates} />
         <MapClickHandler />
       </MapContainer>
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Информация об аварии</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {buildingInfo && (
-            <div>
-              {buildingInfo?.id && <p>ID: {buildingInfo?.id}</p>}
-              <p>
-                Координаты: {buildingInfo?.latlng?.lat}{" "}
-                {buildingInfo?.latlng?.lng}
-              </p>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn btn-danger" onClick={() => setShowModal(false)}>
-            Подтвердить
-          </button>
-          <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
-            Закрыть
-          </button>
-        </Modal.Footer>
-      </Modal>
+      <ModalWindow
+        setBuildingInfo={setBuildingInfo}
+        showModal={showModal}
+        setShowModal={setShowModal}
+        buildingInfo={buildingInfo}
+      />
     </>
   );
 };
