@@ -149,19 +149,32 @@ def get_sorted_points(points):
     return sorted_points
 
 
-def get_extended_points(points, building_levels,):
+def get_extended_points(points, amount,):
     # получаем из точек линии, которые будем расширять
     lines_to_extend = []
+    # i = 0
+    # while i < len(points):
+    #     line = []
+    #     line.append(points[i])
+    #     if i == len(points) - 1:
+    #         line.append(points[0])
+    #     else:
+    #         line.append(points[i + 1])
+    #     lines_to_extend.append(line)
+    #     i += 1
     i = 0
     while i < len(points):
-        line = []
-        line.append(points[i])
-        if i == len(points) - 1:
-            line.append(points[0])
-        else:
-            line.append(points[i + 1])
-        lines_to_extend.append(line)
-        i += 1
+        ii = i+1
+        while ii < len(points):
+            line = []
+            line.append(points[i])
+            line.append(points[ii])
+            lines_to_extend.append(line)
+            ii += 1
+        i+=1
+
+
+
 
     # перемещаем точки в прямой по направлению прямой
     result_points = []
@@ -170,11 +183,11 @@ def get_extended_points(points, building_levels,):
         new_point1 = calculate_destination_point(line[0][0],
                                                 line[0][1],
                                                 bearing + 180,
-                                                building_levels * 3)
+                                                amount)
         new_point2 = calculate_destination_point(line[1][0],
                                                 line[1][1],
                                                 bearing,
-                                                building_levels * 3)
+                                                amount)
         result_points.append(new_point1)
         result_points.append(new_point2)
 
@@ -212,9 +225,8 @@ def entry_point(lat, lon):
     # Формируем ноды
     for build in buildings:
         build['nodes'] = get_way_nodes(build['id'])
-
         build['nodes_rect'] = get_sorted_points(build['nodes'])
-        build['nodes_rect_ext'] = get_extended_points(build['nodes_rect'], build['levels'] * 2)
+        build['nodes_rect_ext'] = get_extended_points(build['nodes'], build['levels'] * 3)
         build['parking'] = not polygon_contains_point(build['nodes_rect_ext'], [lat, lon])
 
     # CACHE
