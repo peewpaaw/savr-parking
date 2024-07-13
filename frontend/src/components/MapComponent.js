@@ -15,23 +15,23 @@ import ModalWindow from "./ModalWindow";
 import PopupComponent from "./Popup";
 
 const customIconParking = L.icon({
-  iconUrl: require("../vanGreen.png"),
+  iconUrl: require("../assign/vanGreen.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 const customIconSpeed = L.icon({
-  iconUrl: require("../van.png"),
+  iconUrl: require("../assign/van.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 const customIconNotParking = L.icon({
-  iconUrl: require("../varRed.png"),
+  iconUrl: require("../assign/varRed.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });
 
 const locationIcon = L.icon({
-  iconUrl: require("../circle.png"),
+  iconUrl: require("../assign/circle.png"),
   iconSize: [42, 42],
   iconAnchor: [21, 42],
 });

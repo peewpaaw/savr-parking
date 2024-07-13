@@ -12,7 +12,7 @@ export default function OffcanvasComponent({ title, children }) {
         <img
           style={{ width: "36px" }}
           alt={"menu"}
-          src={require("../menu.png")}
+          src={require("../assign/menu.png")}
         />
       </button>
       <Offcanvas
