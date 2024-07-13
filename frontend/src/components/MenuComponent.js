@@ -90,7 +90,7 @@ const MenuComponent = ({
                           <p className="card-title">{el?.speed} км/ч</p>
                         </div>
                         <div>
-                          <img alt={"car"} src={require("../car.png")} />
+                          <img alt={"car"} src={require("../assign/car.png")} />
                         </div>
                       </div>
                     </div>
@@ -144,7 +144,7 @@ const MenuComponent = ({
                           <p className="card-title">{el?.speed} км/ч</p>
                         </div>
                         <div>
-                          <img alt={"users"} src={require("../user.png")} />
+                          <img alt={"users"} src={require("../assign/user.png")} />
                         </div>
                       </div>
                     </div>
