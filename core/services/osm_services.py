@@ -14,6 +14,35 @@ RADIUS = 50
 EARTH_RADIUS = 6378137
 
 
+class Building:
+    def __init__(self, object_id):
+        self.object_id = object_id
+        self.nodes = self.get_nodes()
+
+    def get_nodes(self):
+        print('object get_nodes')
+        osm_query = f"""
+        [out:json];
+        way(id:{self.object_id});
+        (._;>;);
+        out body;
+        """
+        url = f"{OSM_API}?data={osm_query}"
+        response = requests.get(url)
+        node_list = []
+        if response.status_code == 200:
+            for node in response.json()['elements']:
+                if node['type'] == 'node':
+                    node_list.append((node['lat'], node['lon']))
+        return node_list
+
+    def get_accident_area(self):
+        pass
+
+
+
+
+
 def calculate_initial_compass_bearing(pointA, pointB):
     lat1 = math.radians(pointA[0])
     lon1 = math.radians(pointA[1])
@@ -152,16 +181,7 @@ def get_sorted_points(points):
 def get_extended_points(points, amount,):
     # получаем из точек линии, которые будем расширять
     lines_to_extend = []
-    # i = 0
-    # while i < len(points):
-    #     line = []
-    #     line.append(points[i])
-    #     if i == len(points) - 1:
-    #         line.append(points[0])
-    #     else:
-    #         line.append(points[i + 1])
-    #     lines_to_extend.append(line)
-    #     i += 1
+
     i = 0
     while i < len(points):
         ii = i+1
@@ -172,9 +192,6 @@ def get_extended_points(points, amount,):
             lines_to_extend.append(line)
             ii += 1
         i+=1
-
-
-
 
     # перемещаем точки в прямой по направлению прямой
     result_points = []

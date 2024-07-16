@@ -1,8 +1,8 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.bts.handlers import bts_router
-from api.osm.handlers import osm_router
+
+from api.handlers import parking_router
 
 
 app = FastAPI(title="savr-parking")
@@ -17,8 +17,7 @@ app.add_middleware(
 )
 
 main_api_router = APIRouter()
-main_api_router.include_router(bts_router)
-main_api_router.include_router(osm_router)
+main_api_router.include_router(parking_router, prefix="/parking", tags=["parking"])
 
 app.include_router(main_api_router)
 
