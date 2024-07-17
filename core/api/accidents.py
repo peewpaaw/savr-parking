@@ -1,24 +1,17 @@
-from typing import Union, List
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import parse_obj_as, TypeAdapter
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.dals import AccidentDAL
 from db.session import get_db
-from settings import BTS_TOKEN, TRACKED_VEHICLES
-from .models import ShowBuilding, AccidentCreate, AccidentUpdate, Accident
-
-from services.bts_services import BtsAPIClient
-from services.osm_services import entry_point, get_accident_area
+from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuilding
 from services.building import Building
 
 
-parking_router = APIRouter(tags=['parking'])
-
-bts_client = BtsAPIClient(token=BTS_TOKEN)
+accidents_router = APIRouter(tags=['accidents'])
 
 
 async def _get_accident_area(object_id):
@@ -35,7 +28,6 @@ async def _get_accident_area(object_id):
     )
 
 
-"""TEST"""
 async def _create_accident(body: AccidentCreate, db) -> Accident:
     async with db as session:
         async with session.begin():
@@ -80,12 +72,12 @@ async def _get_accidents(db):
                 return result
 
 
-@parking_router.post("/", response_model=Accident)
+@accidents_router.post("/", response_model=Accident)
 async def create_accident(body: AccidentCreate, db: AsyncSession = Depends(get_db)) -> Accident:
     return await _create_accident(body, db)
 
 
-@parking_router.post("/{uuid}", response_model=Accident)
+@accidents_router.patch("/{uuid}", response_model=Accident)
 async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = Depends(get_db)) -> Accident:
     #updated_fields = body.dict(exclude_none=True)
     updated_fields = body.dict()
@@ -109,7 +101,7 @@ async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = D
     return  "yeah"
 
 
-@parking_router.get("/{uuid}", response_model=Accident)
+@accidents_router.get("/{uuid}", response_model=Accident)
 async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -> Accident:
     accident = await _get_accident(uuid, db)
     if accident is None:
@@ -117,16 +109,17 @@ async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -
     return accident
 
 
-@parking_router.get("/", response_model=List[Accident])
+@accidents_router.get("/", response_model=List[Accident])
 async def get_accidents(db: AsyncSession = Depends(get_db)) -> List[Accident]:
     accidents = await _get_accidents(db)
     if accidents is None:
         return []
     return accidents
 
+"""depr: """
 
 
-@parking_router.get("/accident_area")
+@accidents_router.get("/accident_area")
 async def accident_area(object_id: str) -> ShowBuilding:
     print('start')
     building = await _get_accident_area(object_id)
@@ -134,23 +127,6 @@ async def accident_area(object_id: str) -> ShowBuilding:
         raise HTTPException(status_code=404, detail=f"Object with id {object_id} not found.")
 
     return building
-
-
-@parking_router.get("/vehicles")
-async def get_vehicles():
-    vehicles = bts_client.get_vehicle_list()
-    vehicles_filtered = list(filter(lambda item: item['object_id'] in TRACKED_VEHICLES, vehicles))
-    return vehicles_filtered
-
-
-@parking_router.get("/current_position")
-async def get_current_position(object_id: str | None = None,):
-    response = bts_client.get_current_position(object_id)
-    response_filtered = list(filter(lambda vehicle: vehicle['object_id'] in TRACKED_VEHICLES, response))
-    response_filtered = response_filtered + list(filter(lambda vehicle: 'android_state' in vehicle, response))
-    for item in response_filtered:
-        item['parking'] = True
-    return response_filtered
 
 
 

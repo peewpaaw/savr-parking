@@ -1,9 +1,7 @@
-import re
 import uuid
 from typing import Optional, List
 
-from fastapi import HTTPException
-from pydantic import BaseModel, EmailStr, validator, constr
+from pydantic import BaseModel
 
 
 class TunedModel(BaseModel):
@@ -37,14 +35,8 @@ class AccidentList(TunedModel):
     accidents: List[Accident]
 
 
-
 class ShowBuilding(BaseModel):
     building_id: str
     nodes: list
     nodes_convex_hull: list
     accident_area: list
-
-
-
-
-
