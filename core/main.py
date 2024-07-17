@@ -1,8 +1,8 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.accidents import accidents_router
-from api.bts import bts_router
+from api.api import api_router
+import settings
 
 
 app = FastAPI(title="savr-parking")
@@ -16,18 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-main_api_router = APIRouter()
-main_api_router.include_router(accidents_router, prefix="/accidents")
-main_api_router.include_router(bts_router, prefix="/bts")
+root_router = APIRouter()
 
-app.include_router(main_api_router)
+app.include_router(root_router)
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}

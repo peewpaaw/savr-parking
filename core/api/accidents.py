@@ -11,7 +11,7 @@ from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuil
 from services.building import Building
 
 
-accidents_router = APIRouter(tags=['accidents'])
+router = APIRouter()
 
 
 async def _get_accident_area(object_id):
@@ -72,12 +72,12 @@ async def _get_accidents(db):
                 return result
 
 
-@accidents_router.post("/", response_model=Accident)
+@router.post("/", response_model=Accident)
 async def create_accident(body: AccidentCreate, db: AsyncSession = Depends(get_db)) -> Accident:
     return await _create_accident(body, db)
 
 
-@accidents_router.patch("/{uuid}", response_model=Accident)
+@router.patch("/{uuid}", response_model=Accident)
 async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = Depends(get_db)) -> Accident:
     #updated_fields = body.dict(exclude_none=True)
     updated_fields = body.dict()
@@ -101,7 +101,7 @@ async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = D
     return  "yeah"
 
 
-@accidents_router.get("/{uuid}", response_model=Accident)
+@router.get("/{uuid}", response_model=Accident)
 async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -> Accident:
     accident = await _get_accident(uuid, db)
     if accident is None:
@@ -109,7 +109,7 @@ async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -
     return accident
 
 
-@accidents_router.get("/", response_model=List[Accident])
+@router.get("/", response_model=List[Accident])
 async def get_accidents(db: AsyncSession = Depends(get_db)) -> List[Accident]:
     accidents = await _get_accidents(db)
     if accidents is None:
@@ -119,7 +119,7 @@ async def get_accidents(db: AsyncSession = Depends(get_db)) -> List[Accident]:
 """depr: """
 
 
-@accidents_router.get("/accident_area")
+@router.get("/accident_area")
 async def accident_area(object_id: str) -> ShowBuilding:
     print('start')
     building = await _get_accident_area(object_id)
