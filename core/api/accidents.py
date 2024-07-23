@@ -1,20 +1,16 @@
-from typing import List, Any
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.dals import AccidentDAL, UserDAL
+from db.dals import AccidentDAL
 from db.session import get_db
 
 from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuilding
-from schemas.users import User
 
 from services.building import Building
-from services.auth import authenticate, create_access_token
-
 
 router = APIRouter()
 
@@ -120,46 +116,6 @@ async def get_accidents(db: AsyncSession = Depends(get_db)) -> List[Accident]:
     if accidents is None:
         return []
     return accidents
-
-
-"""USER TEST"""
-
-async def _get_user_by_username(username: str, db):
-    async with db as session:
-        async with session.begin():
-            print('handlers')
-            user_dal = UserDAL(session)
-            user = await user_dal.get_user_by_username(username=username, db=db)
-            print(user)
-            if user is not None:
-                return User.model_validate(user, from_attributes=True)
-
-
-@router.get('/user/', response_model=User)
-async def get_user_by_username1(username: str, db: AsyncSession = Depends(get_db)) -> User:
-    user = await _get_user_by_username(username, db)
-    if not user:
-        raise HTTPException(status_code=404, detail=f"User not found.")
-    return user
-
-
-@router.post('/login')
-async def login(form_data: OAuth2PasswordRequestForm = Depends(),
-                db: AsyncSession = Depends(get_db)) -> Any:
-    """
-    Get the JWT for a user with data from OAuth2 request form body.
-    """
-    print("login!")
-    user = await authenticate(username=form_data.username, password=form_data.password, db=db)
-    print(user)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    return {
-        "acces_token": "test", # create_access_token(sub=user.id),
-        "token_type": "bearer",
-    }
-
-
 
 
 """depr: """

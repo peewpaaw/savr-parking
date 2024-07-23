@@ -59,7 +59,3 @@ class UserDAL:
         user = res.fetchone()
         if user is not None:
             return user[0]
-
-
-
-

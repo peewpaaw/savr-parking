@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from api.api import api_router
 import settings
-
+from services.auth import oauth2_scheme
 
 app = FastAPI(title="savr-parking")
 
@@ -23,9 +23,6 @@ root_router = APIRouter()
 
 app.include_router(root_router)
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 @app.get("/")

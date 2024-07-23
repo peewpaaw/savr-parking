@@ -2,10 +2,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Union, Optional
 
 import jwt
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm.session import Session
 from passlib.context import CryptContext
 
+import settings
 from db.models import User
 from db.dals import UserDAL
 from settings import SECRET_KEY, ALGORITHM
@@ -13,7 +15,7 @@ from settings import SECRET_KEY, ALGORITHM
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/users/token")
 
 
 async def authenticate(username: str, password: str, db) -> Optional[User]:
@@ -23,11 +25,12 @@ async def authenticate(username: str, password: str, db) -> Optional[User]:
         return None
     if not verify_password(password, user.hashed_password):
         return None
-    return User
-
+    return user
 
 
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return PWD_CONTEXT.verify(plain_password, hashed_password)
 
