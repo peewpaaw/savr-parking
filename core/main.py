@@ -1,5 +1,8 @@
-from fastapi import FastAPI, APIRouter
+from typing import Annotated
+
+from fastapi import FastAPI, APIRouter, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 
 from api.api import api_router
 import settings
@@ -22,6 +25,14 @@ app.include_router(root_router)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.get("/hello")
+async def hello(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}

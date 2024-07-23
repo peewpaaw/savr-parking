@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import update, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Accident
+from .models import Accident, User
 
 
 class AccidentDAL:
@@ -47,5 +47,19 @@ class AccidentDAL:
         accidents = res.scalars().all()
         if accidents is not None:
             return accidents
+
+
+class UserDAL:
+    def __init__(self, db_session: AsyncSession):
+        self.db_session = db_session
+
+    async def get_user_by_username(self, username: str):
+        query = select(User).where(User.username == username)
+        res = await self.db_session.execute(query)
+        user = res.fetchone()
+        if user is not None:
+            return user[0]
+
+
 
 
