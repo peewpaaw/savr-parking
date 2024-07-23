@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.users import get_current_user
 from db.dals import AccidentDAL
 from db.session import get_db
 
@@ -12,7 +13,9 @@ from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuil
 
 from services.building import Building
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(get_current_user)]
+)
 
 
 async def _get_accident_area(object_id):
@@ -74,12 +77,19 @@ async def _get_accidents(db):
 
 
 @router.post("/", response_model=Accident)
-async def create_accident(body: AccidentCreate, db: AsyncSession = Depends(get_db)) -> Accident:
+async def create_accident(
+        body: AccidentCreate,
+        db: AsyncSession = Depends(get_db)
+) -> Accident:
     return await _create_accident(body, db)
 
 
 @router.patch("/{uuid}", response_model=Accident)
-async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = Depends(get_db)) -> Accident:
+async def update_accident(
+        uuid: UUID,
+        body: AccidentUpdate,
+        db: AsyncSession = Depends(get_db)
+) -> Accident:
     #updated_fields = body.dict(exclude_none=True)
     updated_fields = body.dict()
     if updated_fields == {}:
@@ -103,7 +113,10 @@ async def update_accident(uuid: UUID, body: AccidentUpdate, db: AsyncSession = D
 
 
 @router.get("/{uuid}", response_model=Accident)
-async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -> Accident:
+async def get_accident_by_uuid(
+        uuid: UUID,
+        db: AsyncSession = Depends(get_db)
+) -> Accident:
     accident = await _get_accident(uuid, db)
     if accident is None:
         raise HTTPException(status_code=404, detail=f"Accident with uuid {uuid} not found")
@@ -111,7 +124,9 @@ async def get_accident_by_uuid(uuid: UUID, db: AsyncSession = Depends(get_db)) -
 
 
 @router.get("/", response_model=List[Accident])
-async def get_accidents(db: AsyncSession = Depends(get_db)) -> List[Accident]:
+async def get_accidents(
+        db: AsyncSession = Depends(get_db)
+) -> List[Accident]:
     accidents = await _get_accidents(db)
     if accidents is None:
         return []
