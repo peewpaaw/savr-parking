@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import Column, String, Boolean, Float, Integer, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.dialects.postgresql import ARRAY
 
 Base = declarative_base()
 
@@ -18,6 +19,7 @@ class Accident(Base):
     is_active = Column(Boolean(), default=True)
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="accidents")
+    nodes = Column(ARRAY(Float), nullable=True)
 
 
 class User(Base):

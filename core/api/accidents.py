@@ -80,8 +80,6 @@ async def create_accident(
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user),
 ) -> Accident:
-    print(user)
-    print('body')
     return await _create_accident(body=body, user=user, db=db)
 
 

@@ -2,7 +2,7 @@ Docker:
 - ```docker-compose up -d --build```
 
 .env:
-```
+``` 
 SECRET_KEY=
 BTS_TOKEN=
 REDIS_HOST=

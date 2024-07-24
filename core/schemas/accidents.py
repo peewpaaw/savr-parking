@@ -24,6 +24,10 @@ class AccidentUpdate(BaseModel):
     is_active: Optional[bool]
 
 
+class AccidentNodes(BaseModel):
+    node: Optional[List[float]]
+
+
 class Accident(TunedModel):
     uuid: uuid.UUID
     latitude: Optional[float]
@@ -31,6 +35,7 @@ class Accident(TunedModel):
     building_id: str
     note: str
     user_id: int
+    nodes: Optional[List[List[float]]]
 
 
 class AccidentList(TunedModel):

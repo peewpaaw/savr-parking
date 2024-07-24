@@ -4,6 +4,9 @@ from sqlalchemy import update, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import Accident, User
+from services.building import Building
+
+import settings
 
 
 class AccidentDAL:
@@ -27,9 +30,18 @@ class AccidentDAL:
             longitude=longitude,
             user_id=user_id
         )
+        new_accident.nodes = self._get_accident_area(new_accident.building_id)
         self.db_session.add(new_accident)
         await self.db_session.flush()
         return new_accident
+
+    def _get_accident_area(self, building_id: str):
+        building = Building(
+            object_id=building_id,
+            distance=settings.ACCIDENT_DISTANCE
+        )
+        return building.accident_area
+
 
     async def update_accident(
             self, uuid: UUID, **kwargs
