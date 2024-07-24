@@ -12,9 +12,21 @@ class AccidentDAL:
         self.db_session = db_session
 
     async def create_accident(
-            self, building_id: str, note: str | None = None
+            self,
+            building_id: str,
+            user_id: int,
+            latitude: float | None = None,
+            longitude: float | None = None,
+            note: str | None = None,
+
     ) -> Accident:
-        new_accident = Accident(building_id=building_id, note=note)
+        new_accident = Accident(
+            building_id=building_id,
+            note=note,
+            latitude=latitude,
+            longitude=longitude,
+            user_id=user_id
+        )
         self.db_session.add(new_accident)
         await self.db_session.flush()
         return new_accident
@@ -43,7 +55,7 @@ class AccidentDAL:
     async def get_accidents(self):
         query = select(Accident)
         res = await self.db_session.execute(query)
-       # accidents = res.all()#res.fetchall()
+        # accidents = res.all()#res.fetchall()
         accidents = res.scalars().all()
         if accidents is not None:
             return accidents

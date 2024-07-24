@@ -16,6 +16,7 @@ class AccidentCreate(BaseModel):
     longitude: Optional[float] = None
     building_id: str
     note: str
+    #created_by: int
 
 
 class AccidentUpdate(BaseModel):
@@ -29,6 +30,7 @@ class Accident(TunedModel):
     longitude: Optional[float]
     building_id: str
     note: str
+    user_id: int
 
 
 class AccidentList(TunedModel):

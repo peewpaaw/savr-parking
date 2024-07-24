@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.users import get_current_user
 from db.dals import AccidentDAL
+from db.models import User
 from db.session import get_db
 
 from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuilding
@@ -14,7 +15,7 @@ from schemas.accidents import AccidentCreate, AccidentUpdate, Accident, ShowBuil
 from services.building import Building
 
 router = APIRouter(
-    dependencies=[Depends(get_current_user)]
+    #dependencies=[Depends(get_current_user)]
 )
 
 
@@ -32,21 +33,18 @@ async def _get_accident_area(object_id):
     )
 
 
-async def _create_accident(body: AccidentCreate, db) -> Accident:
+async def _create_accident(body: AccidentCreate, user: User, db) -> Accident:
     async with db as session:
         async with session.begin():
             accident_dal = AccidentDAL(session)
             accident = await accident_dal.create_accident(
                 building_id=body.building_id,
-                note=body.note
+                note=body.note,
+                latitude=body.latitude,
+                longitude=body.longitude,
+                user_id=user.id
             )
-            return Accident(
-                uuid=accident.uuid,
-                latitude=accident.latitude,
-                longitude=accident.longitude,
-                building_id=accident.building_id,
-                note=accident.note
-            )
+            return Accident.model_validate(accident, from_attributes=True)
 
 
 async def _update_accident(uuid: UUID, updated_fields: dict, db) -> Accident:
@@ -79,9 +77,12 @@ async def _get_accidents(db):
 @router.post("/", response_model=Accident)
 async def create_accident(
         body: AccidentCreate,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user),
 ) -> Accident:
-    return await _create_accident(body, db)
+    print(user)
+    print('body')
+    return await _create_accident(body=body, user=user, db=db)
 
 
 @router.patch("/{uuid}", response_model=Accident)

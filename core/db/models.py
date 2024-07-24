@@ -1,9 +1,8 @@
 import uuid
 
-from sqlalchemy import Column, String, Boolean, Float, Integer
+from sqlalchemy import Column, String, Boolean, Float, Integer, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
-
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -17,6 +16,8 @@ class Accident(Base):
     building_id = Column(String, nullable=True)
     note = Column(String, nullable=True)
     is_active = Column(Boolean(), default=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship("User", back_populates="accidents")
 
 
 class User(Base):
@@ -26,6 +27,7 @@ class User(Base):
     username = Column(String, nullable=False)
     is_superuser = Column(Boolean, default=False)
     hashed_password = Column(String, nullable=False)
+    accidents = relationship("Accident", back_populates="user")
 
 
 
