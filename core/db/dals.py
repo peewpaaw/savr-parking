@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import update, and_, select
+from sqlalchemy import update, and_, select, desc
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Accident, User
+from .models import Accident, User, Subject, SubjectStatus
 from services.building import Building
 
 import settings
@@ -41,7 +42,6 @@ class AccidentDAL:
             distance=settings.ACCIDENT_DISTANCE
         )
         return building.accident_area
-
 
     async def update_accident(
             self, uuid: UUID, **kwargs
@@ -83,3 +83,78 @@ class UserDAL:
         user = res.fetchone()
         if user is not None:
             return user[0]
+
+
+class SubjectDAL:
+    def __init__(self, db_session: AsyncSession):
+        self.db_session = db_session
+
+    async def create_subject(
+            self,
+            type: str,
+            bts_id: int | None = None
+
+    ) -> Subject:
+        new_subject = Subject(
+            type=type,
+            bts_id=bts_id
+        )
+        self.db_session.add(new_subject)
+        await self.db_session.flush()
+        return new_subject
+
+    async def add_subject_status(
+            self,
+            subject_uuid: UUID,
+            datetime_unix,
+            latitude: float,
+            longitude: float,
+            speed: float,
+    ):
+        # subject_q = await self.db_session.execute(select(Subject).where(bts_id=bts_id))
+        # subject = subject_q.fetchone()
+        # if subject is not None:
+        subject_status = SubjectStatus(
+            subject_uuid=subject_uuid,
+            datetime_unix=datetime_unix,
+            latitude=latitude,
+            longitude=longitude,
+            speed=speed
+        )
+        self.db_session.add(subject_status)
+        await self.db_session.flush()
+        return subject_status
+
+    async def get_subjects(self, uuid: UUID | None = None):
+        query = select(Subject)
+        if uuid:
+            query = query.where(uuid=uuid)
+        res = await self.db_session.execute(query)
+        subjects = res.scalars().all()
+        if subjects:
+            return subjects
+
+    async def get_bts_subject(self):
+        query = select(Subject).where(Subject.bts_id is not None)
+        result = await self.db_session.execute(query)
+        subjects = result.scalars().all()
+        if subjects:
+            return subjects
+
+    async def get_subject_status(self, uuid):
+        query = select(SubjectStatus)\
+            .join(Subject)\
+            .filter(Subject.uuid == uuid)\
+            .order_by(desc(SubjectStatus.datetime_entry))
+        result = await self.db_session.execute(query)
+        subject_status = result.fetchone()
+        if subject_status:
+            return subject_status
+
+
+
+        # .join(Subject) \
+        #     .filter(Subject.uuid == subject_uuid) \
+        #     .order_by(desc(SubjectStatus.datetime_entry)) \
+        #     .first()
+

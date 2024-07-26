@@ -1,7 +1,8 @@
 import uuid
+from enum import Enum
 
-from sqlalchemy import Column, String, Boolean, Float, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, Float, Integer, ForeignKey, BIGINT, func
+from sqlalchemy.dialects.postgresql import UUID, ENUM, TIMESTAMP
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -32,5 +33,28 @@ class User(Base):
     accidents = relationship("Accident", back_populates="user")
 
 
+class SubjectType(Enum):
+    vehicle = "VEHICLE"
+    mobile = "MOBILE"
 
+
+class Subject(Base):
+    __tablename__ = "subject"
+
+    uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type = Column(ENUM(SubjectType), nullable=False)
+    bts_id = Column(Integer, nullable=True)
+    statuses = relationship("SubjectStatus", back_populates="subject")
+
+
+class SubjectStatus(Base):
+    __tablename__ = "subject_status"
+    id = Column(Integer, primary_key=True)
+    subject_uuid = Column(UUID, ForeignKey("subject.uuid"))
+    subject = relationship(Subject, back_populates='statuses')
+    datetime_entry = Column(TIMESTAMP, server_default=func.now())
+    datetime_unix = Column(BIGINT, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    speed = Column(Float, nullable=True)
 

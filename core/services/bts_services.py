@@ -5,6 +5,7 @@ API_URL = 'https://api.nav.by/info/'
 TOKEN_API_URL = f"{API_URL}integration_get_token.php"
 DISPATCH_API_URL = f"{API_URL}integration.php"
 
+
 class BtsAPIClient():
     def __init__(self, token, login=None, password=None):
         self.token = token
