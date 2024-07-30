@@ -26,6 +26,9 @@ async def scheduled_task(db_session: AsyncSession):
                         speed=float(subject_status_new[0]["speed"])
                     )
 
+
+
+
 async def scheduler_task():
     """Wrapper to run the scheduled task within FastAPI dependency context"""
     async for db_session in get_db():

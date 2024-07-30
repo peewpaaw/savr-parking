@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from sqlalchemy import update, and_, select, desc
+from sqlalchemy import update, and_, select, desc, event
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.engine import Engine
 
 from .models import Accident, User, Subject, SubjectStatus
 from services.building import Building
@@ -157,4 +158,18 @@ class SubjectDAL:
         #     .filter(Subject.uuid == subject_uuid) \
         #     .order_by(desc(SubjectStatus.datetime_entry)) \
         #     .first()
+
+
+
+# before_execute event on all Engine instances
+@event.listens_for(Engine, "before_execute")
+def my_before_execute(
+    conn,
+    clauseelement,
+    multiparams,
+    params,
+    execution_options,
+):
+    print("before execute!")
+
 

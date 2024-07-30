@@ -6,6 +6,9 @@ from sqlalchemy.dialects.postgresql import UUID, ENUM, TIMESTAMP
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 
+from sqlalchemy import event
+
+
 Base = declarative_base()
 
 
@@ -57,4 +60,6 @@ class SubjectStatus(Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     speed = Column(Float, nullable=True)
+
+
 
